@@ -1,0 +1,7 @@
+{
+  "PageSize": 2000,
+  "SourceConn": "Data Source=DESKTOP-AOLVREB\\SQLEXPRESS01;Initial Catalog=iroo;Integrated Security=True;Encrypt=False;",
+  "DestConn": "Data Source=DESKTOP-AOLVREB\\SQLEXPRESS01;Initial Catalog=cp;Integrated Security=True;Encrypt=False;",
+  "SourceTable": "Contact",
+  "DestTable": "Contact"
+}
