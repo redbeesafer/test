@@ -185,7 +185,7 @@ namespace copyData
                 {
                     using (TransactionScope scope = new TransactionScope())
                     {
-                        //totalCntNow += AddDataList(dataList);
+                        totalCntNow += AddDataList(dataList);
                         Console.WriteLine($"{tiltle} 已匯入");
                         scope.Complete();
                     }
