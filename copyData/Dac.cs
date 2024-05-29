@@ -89,16 +89,19 @@ namespace copyData
         /// <returns></returns>
         protected string[] GetCols(int type = 0)
         {
+            bool isSource = type == 0 || type == 1;
+            string tableName = isSource ? _sourceTable : _destTable;
+
             switch (type)
             {
                 case 1:
                     //抓pk
-                    _sql = "exec('select lower(column_name) from information_schema.key_column_usage where table_name = '''+@tableName+'''')";
+                    _sql = $"select lower(column_name) from information_schema.key_column_usage where table_name = '{tableName}'";
                     break;
                 default:
                     //取得所有欄位(排除pk、identity)
                     _sql = $@" 
-                        declare @obj_id int  = object_id(@tableName);
+                        declare @obj_id int  = object_id('{tableName}');
                         with pkCTE as (
                         	select ic.object_id, ic.column_id
                         	from sys.indexes i
@@ -116,8 +119,7 @@ namespace copyData
                     break;
             }
 
-            bool isSource = type == 0 || type == 1;
-            _objParam = new { tableName = isSource ? _sourceTable : _destTable };
+            _objParam = null;
             return GetDataList<string>(isSource).ToArray();
         }
 
@@ -178,12 +180,12 @@ namespace copyData
             for (int pageIndex = 1; pageIndex <= pageIndexMax; pageIndex++)
             {
                 dataList = GetDataList(pageIndex, _pageSize, _orderBy);
-                tiltle = $"{(pageIndex - 1) * _pageSize + 1} ~ {pageIndex * _pageSize}";
+                tiltle = $"第{(pageIndex - 1) * _pageSize + 1}筆 ~ 第{pageIndex * _pageSize}筆";
                 try
                 {
                     using (TransactionScope scope = new TransactionScope())
                     {
-                        totalCntNow += AddDataList(dataList);
+                        //totalCntNow += AddDataList(dataList);
                         Console.WriteLine($"{tiltle} 已匯入");
                         scope.Complete();
                     }

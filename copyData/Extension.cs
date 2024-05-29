@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace copyData
+﻿namespace copyData
 {
     /// <summary>
     /// 擴充功能

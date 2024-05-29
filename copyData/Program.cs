@@ -1,6 +1,4 @@
-﻿using System.Transactions;
-
-namespace copyData
+﻿namespace copyData
 {
     /// <summary>
     /// 轉檔用
