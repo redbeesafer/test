@@ -1,5 +1,5 @@
 {
-  "PageSize": 2000,
+  "PageSize": 5000,
   "SourceConn": "Data Source=.;Initial Catalog=iroo;Integrated Security=True;Encrypt=False;",
   "DestConn": "Data Source=.;Initial Catalog=cp;Integrated Security=True;Encrypt=False;",
   "SourceTable": "Contact",

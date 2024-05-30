@@ -29,10 +29,10 @@ namespace copyData
         /// <summary>總資料筆數</summary>
         private readonly int _totalDataCnt;
 
-        /// <summary>批次筆數summary>
+        /// <summary>批次筆數(匯入筆數) <s/ummary>
         private readonly int _pageSize;
 
-        /// <summary>排序欄位(逗點分開)<summary>
+        /// <summary>排序欄位(逗點分開)</summary>
         private readonly string _orderBy;
 
         /// <summary>自定義sql語法</summary>
