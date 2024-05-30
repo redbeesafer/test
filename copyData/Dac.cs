@@ -216,16 +216,7 @@ namespace copyData
                                         Select(data =>
                                         {
                                             if (data != null)
-                                            {
-                                                dict = ((IDictionary<string, object>)data).Select(kvp =>
-                                                {
-                                                    if (kvp.Value != null && kvp.Value.GetType() == typeof(byte[]))
-                                                    {
-                                                        return new KeyValuePair<string, object>(kvp.Key, "<<被加密囉>>");
-                                                    }
-                                                    return kvp;
-                                                }).ToDictionary(x => x.Key, x => x.Value);
-                                            }
+                                                dict = ((IDictionary<string, object>)data).Select(kvp => { return kvp.Value != null && kvp.Value.GetType() == typeof(byte[]) ? new KeyValuePair<string, object>(kvp.Key, "<<被加密囉>>") : kvp; }).ToDictionary(x => x.Key, x => x.Value);
                                             return data == null ? default(T) : (T)Convert.ChangeType(dict, typeof(T));
                                         }).ToList();
                     return dictList;
