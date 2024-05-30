@@ -95,7 +95,7 @@ namespace copyData
             switch (type)
             {
                 case 1:
-                    //抓pk
+                    //抓pk (用於order by)
                     _sql = $"select lower(column_name) from information_schema.key_column_usage where table_name = '{tableName}'";
                     break;
                 default:
@@ -131,7 +131,7 @@ namespace copyData
         /// <param name="pageSize">頁筆數</param>
         /// <param name="orderBy">依什麼排序</param>
         /// <returns></returns>
-        public List<IDictionary<string, object>> GetDataList(int pageIndex, int pageSize, string orderBy)
+        public List<Dictionary<string, object>> GetDataList(int pageIndex, int pageSize, string orderBy)
         {
             _sql = $@" select {string.Join(',', _sourceCols)}
                        from {_sourceTable} (nolock)
@@ -141,7 +141,7 @@ namespace copyData
 
             _objParam = new { pageIndex, pageSize };
 
-            return GetDataList<IDictionary<string, object>>();
+            return GetDataList<Dictionary<string, object>>();
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace copyData
         /// <param name="tableName">資料表</param>
         /// <param name="dataList"> 資料</param>
         /// <returns></returns>
-        public int AddDataList(List<IDictionary<string, object>> dataList)
+        public int AddDataList(List<Dictionary<string, object>> dataList)
         {
             //整理出一樣的欄位
             string[] cols = _destCols.Where(col => _sourceCols.Contains(col)).ToArray();
@@ -175,7 +175,7 @@ namespace copyData
             int totalCntNow = 0; //目前筆數
             int pageIndexMax = _pageSize == 0 ? 0 : (_totalDataCnt / _pageSize) + 1;  //最大頁碼
             string tiltle = "";
-            List<IDictionary<string, object>> dataList = new List<IDictionary<string, object>>();
+            List<Dictionary<string, object>> dataList = new List<Dictionary<string, object>>();
 
             for (int pageIndex = 1; pageIndex <= pageIndexMax; pageIndex++)
             {
@@ -209,22 +209,24 @@ namespace copyData
             string strConn = isSource ? _strConnSource : _strConnDest;
             using (SqlConnection sqlConn = new SqlConnection(strConn))
             {
-                if (typeof(T) == typeof(IDictionary<string, object>) || typeof(T) == typeof(Dictionary<string, object>))
+                if (typeof(T) == typeof(Dictionary<string, object>))
                 {
-                    IDictionary<string, object> dict = null;
-                    var dictList = sqlConn.Query<object>(_sql, _objParam, commandTimeout: _cmdTimeOut).
+                    Dictionary<string, object> dict = new Dictionary<string, object>();
+                    var dictList = sqlConn.Query(_sql, _objParam, commandTimeout: _cmdTimeOut).
                                         Select(data =>
                                         {
                                             if (data != null)
                                             {
-                                                dict = (IDictionary<string, object>)data;
-                                                foreach (string key in dict.Keys)
+                                                dict = ((IDictionary<string, object>)data).Select(kvp =>
                                                 {
-                                                    if (dict[key] != null && typeof(byte[]) == dict[key].GetType())
-                                                        dict[key] = "<<被加密囉>>"; //處理byte[]的部分....
-                                                }
+                                                    if (kvp.Value != null && kvp.Value.GetType() == typeof(byte[]))
+                                                    {
+                                                        return new KeyValuePair<string, object>(kvp.Key, "<<被加密囉>>");
+                                                    }
+                                                    return kvp;
+                                                }).ToDictionary(x => x.Key, x => x.Value);
                                             }
-                                            return data == null ? default(T) : (T)dict;
+                                            return data == null ? default(T) : (T)Convert.ChangeType(dict, typeof(T));
                                         }).ToList();
                     return dictList;
                 }
