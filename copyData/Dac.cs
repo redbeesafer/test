@@ -29,7 +29,7 @@ namespace copyData
         /// <summary>總資料筆數</summary>
         private readonly int _totalDataCnt;
 
-        /// <summary>批次筆數(匯入筆數) <s/ummary>
+        /// <summary>批次筆數(匯入筆數)<s/ummary>
         private readonly int _pageSize;
 
         /// <summary>排序欄位(逗點分開)</summary>
@@ -147,8 +147,7 @@ namespace copyData
         /// <summary>
         /// 新增目的地資料
         /// </summary>
-        /// <param name="tableName">資料表</param>
-        /// <param name="dataList"> 資料</param>
+        /// <param name="dataList">資料</param>
         /// <returns></returns>
         public int AddDataList(List<Dictionary<string, object>> dataList)
         {
@@ -164,6 +163,34 @@ namespace copyData
             using (SqlConnection sqlConn = new SqlConnection(_strConnDest))
             {
                 return sqlConn.Execute(_sql, _objParam, commandTimeout: _cmdTimeOut);
+            }
+        }
+
+        /// <summary>
+        /// 取得來源資料(T)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="isSource">是否為來源</param>
+        /// <returns></returns>
+        protected List<T> GetDataList<T>(bool isSource = true)
+        {
+            string strConn = isSource ? _strConnSource : _strConnDest;
+            using (SqlConnection sqlConn = new SqlConnection(strConn))
+            {
+                if (typeof(T) == typeof(Dictionary<string, object>))
+                {
+                    Dictionary<string, object> dict = new Dictionary<string, object>();
+                    var dictList = sqlConn.Query(_sql, _objParam, commandTimeout: _cmdTimeOut).
+                                        Select(data =>
+                                        {
+                                            if (data != null)
+                                                dict = ((IDictionary<string, object>)data).Select(kvp => { return kvp.Value != null && kvp.Value.GetType() == typeof(byte[]) ? new KeyValuePair<string, object>(kvp.Key, "<<被加密囉>>") : kvp; }).ToDictionary(x => x.Key, x => x.Value);
+                                            return data == null ? default(T) : (T)Convert.ChangeType(dict, typeof(T));
+                                        }).ToList();
+                    return dictList;
+                }
+                else
+                    return sqlConn.Query<T>(_sql, _objParam, commandTimeout: _cmdTimeOut).ToList();
             }
         }
 
@@ -196,34 +223,6 @@ namespace copyData
                 }
             }
             Console.WriteLine($"共匯入 {totalCntNow} 筆資料");
-        }
-
-        /// <summary>
-        /// 取得來源資料(T)
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="isSource">是否為來源</param>
-        /// <returns></returns>
-        protected List<T> GetDataList<T>(bool isSource = true)
-        {
-            string strConn = isSource ? _strConnSource : _strConnDest;
-            using (SqlConnection sqlConn = new SqlConnection(strConn))
-            {
-                if (typeof(T) == typeof(Dictionary<string, object>))
-                {
-                    Dictionary<string, object> dict = new Dictionary<string, object>();
-                    var dictList = sqlConn.Query(_sql, _objParam, commandTimeout: _cmdTimeOut).
-                                        Select(data =>
-                                        {
-                                            if (data != null)
-                                                dict = ((IDictionary<string, object>)data).Select(kvp => { return kvp.Value != null && kvp.Value.GetType() == typeof(byte[]) ? new KeyValuePair<string, object>(kvp.Key, "<<被加密囉>>") : kvp; }).ToDictionary(x => x.Key, x => x.Value);
-                                            return data == null ? default(T) : (T)Convert.ChangeType(dict, typeof(T));
-                                        }).ToList();
-                    return dictList;
-                }
-                else
-                    return sqlConn.Query<T>(_sql, _objParam, commandTimeout: _cmdTimeOut).ToList();
-            }
         }
     }
 }
